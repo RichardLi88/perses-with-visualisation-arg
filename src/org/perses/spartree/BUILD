@@ -51,6 +51,7 @@ kt_jvm_library(
         "SparTreeNodeFactory.kt",
         "SparTreeSentinelRootNode.kt",
         "SparTreeSimplifier.kt",
+        "TransformationKind.kt",
     ],
     deps = [
         ":tree_node_filter_result",

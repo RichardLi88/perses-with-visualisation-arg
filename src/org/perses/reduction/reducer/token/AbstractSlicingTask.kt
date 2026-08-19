@@ -89,7 +89,10 @@ abstract class AbstractSlicingTask(
           outputManager.fileContentList
             .transformToImmutableList {
               FileNameContentPair(
-                fileName = it.fileName.baseName,
+                fileName =
+                  reducerContext.ioManager.reductionInputs
+                    .getRelativePathForOrigFile(it.fileName)
+                    .joinToString("/"),
                 content = it.content,
               )
             }

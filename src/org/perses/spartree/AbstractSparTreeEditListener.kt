@@ -20,6 +20,8 @@ abstract class AbstractSparTreeEditListener {
   class SparTreeEditEvent(
     val programSizeBefore: Int,
     val edit: AbstractSparTreeEdit<*>,
+    val parentStateId: String,
+    val resultStateId: String,
   ) {
     val program = edit.program
   }

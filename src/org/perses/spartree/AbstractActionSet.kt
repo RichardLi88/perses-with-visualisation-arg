@@ -24,6 +24,7 @@ import org.perses.util.toImmutableMap
 sealed class AbstractActionSet<ACTION : AbstractTreeEditAction>(
   val actions: ImmutableList<ACTION>,
   val actionsDescription: String,
+  val transformationKind: TransformationKind,
   canBeSorted: Boolean,
 ) {
   private val targetToActionMap =

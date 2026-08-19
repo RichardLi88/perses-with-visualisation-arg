@@ -19,7 +19,7 @@ package org.perses.spartree
 class AnyNodeReplacementTreeEdit internal constructor(
   tree: SparTree,
   actionSet: NodeReplacementActionSet,
-) : AbstractNodeReplacementTreeEdit(tree, actionSet) {
+) : AbstractNodeReplacementTreeEdit(tree, actionSet, actionSet.transformationKind) {
   override fun internalApplyToTree() {
     actionSet.actions.forEach { action ->
       action.apply()

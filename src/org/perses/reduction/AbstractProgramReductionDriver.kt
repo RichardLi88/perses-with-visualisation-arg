@@ -44,6 +44,7 @@ import org.perses.reduction.cache.QueryCacheTimeCsvProfiler
 import org.perses.reduction.cache.QueryCacheTimeProfiler
 import org.perses.reduction.cache.QueryCacheType
 import org.perses.reduction.event.LazyProgramOutputer
+import org.perses.reduction.event.ProgramStateTransitionEvent
 import org.perses.reduction.event.ReductionStartEvent
 import org.perses.reduction.event.SanityCheckEvent
 import org.perses.reduction.event.TestScriptExecutorServiceStatisticsSnapshot
@@ -293,7 +294,15 @@ abstract class AbstractProgramReductionDriver(
       .builderWithExpectedSize<FileNameContentPair<String>>(contentList.size + 1)
       .apply {
         contentList.forEach {
-          add(FileNameContentPair(fileName = it.fileName.baseName, content = it.content))
+          add(
+            FileNameContentPair(
+              fileName =
+                ioManager.reductionInputs
+                  .getRelativePathForOrigFile(it.fileName)
+                  .joinToString("/"),
+              content = it.content,
+            ),
+          )
         }
         add(
           FileNameContentPair(
@@ -607,6 +616,7 @@ abstract class AbstractProgramReductionDriver(
     if (!cmd.outputRefiningFlags.callCReduce) {
       return
     }
+    val oldTree = tree.getTreeRegardlessOfParsability()
     val program = tree.programSnapshot
     val origTokenCount = program.tokenCount
     logger.ktInfo {
@@ -651,6 +661,19 @@ abstract class AbstractProgramReductionDriver(
       logger.ktSevere { "The file produced by C-Reduce cannot be parsed: $e" }
       return
     }
+    val newTree = tree.getTreeRegardlessOfParsability()
+    newTree.preserveReductionStateFrom(oldTree)
+    val (parentStateId, resultStateId) = newTree.transitionToSystemState()
+    listenerManager.onProgramStateTransition(
+      ProgramStateTransitionEvent(
+        currentTimeMillis = System.currentTimeMillis(),
+        parentStateId = parentStateId,
+        resultStateId = resultStateId,
+        reason = "CREDUCE",
+        program = tree.programSnapshot,
+        outputCreator = ::computeFileContentListForProgram,
+      ),
+    )
     ioManager.updateBestResult(tree.programSnapshot)
     val tokenCount = tree.programSnapshot.tokenCount
     logger.ktInfo {
@@ -911,6 +934,7 @@ abstract class AbstractProgramReductionDriver(
             originalTree.getTreeRegardlessOfParsability().sparTreeNodeFactory,
             parseTree,
           )
+        sparTree.preserveReductionStateFrom(originalTree.getTreeRegardlessOfParsability())
         SparTreeWithParsability(sparTree, parsable = true)
       } catch (e: Exception) {
         SparTreeWithParsability(

@@ -35,6 +35,11 @@ search space by avoiding generating syntactically invalid programs.</p>
 <p>Support for other languages is coming soon.</p>
 <h3>Obtain and Run</h3>
 <p>There are three ways to obtain Perses.</p>
+<p>Perses must be built, tested, and run with Java 21. Ensure <code>java -version</code> reports Java 21 before
+using the commands below. When running Bazel tests, select its Java 21 runtime explicitly if your
+system default is newer:</p>
+<pre><code class="language-bash">bazelisk test --java_runtime_version=remotejdk_21 //...
+</code></pre>
 <ul>
 <li>
 <p>Download a prebuilt release JAR file from our <a href="https://github.com/perses-project/perses/releases">release page</a>,
@@ -74,22 +79,23 @@ if the specific language can be parsed by an Antlr parser.</p>
 </li>
 </ul>
 <h3>Reduction visualization trace</h3>
-<p>Use <code>--visualization-dump-file &lt;trace.jsonl&gt;</code> to create a versioned JSONL event stream for
-visualizing attempted and accepted reductions. Each line is one JSON object. The stream records the
-initial program, tested candidates, cached rejections, cancelled tests, committed candidates, and
-the final reduction summary.</p>
+<p>Use <code>--visualization-dump-file &lt;reduction.json&gt;</code> to create one schema-versioned JSON document for
+visualizing attempted and accepted reductions. Schema 2.0 separates content-addressed source from
+logical reduction states, so concurrent candidates retain the state from which they were created.</p>
 <pre><code class="language-bash">java -jar perses_deploy.jar \
     --test-script test.sh \
     --input-file input.c \
-    --visualization-dump-file trace.jsonl
+    --visualization-dump-file reduction.json
 </code></pre>
-<p>Candidate and commit records share an opaque string <code>candidateId</code>. Each snapshot contains output
-files as <code>path</code>/<code>content</code> pairs and ordered token objects with <code>index</code>/<code>text</code>; a commit advances the
-candidate's <code>baseRevision</code> to <code>newRevision</code>. Commit records retain edit metadata even when no test
-event preceded them, and critical failures are emitted as <code>error</code> records. Visualizers should diff
-a candidate snapshot against its base revision. The schema is identified by <code>schemaVersion</code> and
-currently has version <code>1</code>. The trace can be large because candidate records contain complete source
-snapshots.</p>
+<p>The authoritative graph is formed by <code>states</code> and <code>candidates</code>: every candidate has an immutable
+<code>baseStateId</code>, and an accepted candidate has a <code>resultStateId</code>. <code>programs</code> deduplicates accepted
+multi-file source, while other candidates carry path-aware patches. Every candidate also records a
+stable transformation <code>kind</code>, concrete edit class, reducer, action metadata, and syntax targets.
+<code>steps</code> is the ordered accepted trajectory, and <code>summary</code> contains reduction and timing totals. The
+source stored in <code>programs</code> and candidate patches uses the language's original-format printer for
+readability, independently of <code>--code-format</code>. The machine-readable contract is in
+<code>doc/reduction_trace_schema_v2.json</code>. This schema replaces the earlier JSONL schema and is not
+backward compatible with it.</p>
 <p>Check all available command line arguments</p>
 <pre><code class="language-bash">java -jar perses_deploy.jar  --help
 </code></pre>
@@ -220,7 +226,7 @@ snapshots.</p>
     --stat-dump-file
       The file to save the statistics collected during reduction.
     --visualization-dump-file
-      The JSONL file to record reduction events for visualization.
+      The schema-2 JSON file to record the reduction graph for visualization.
     --profile-query-cache-time
       The file to save the profiling data of the query cache.
     --profile-query-cache-time-csv

@@ -29,6 +29,7 @@ import org.perses.reduction.event.NodeEditActionSetCacheClearanceEvent
 import org.perses.reduction.event.NodeEditActionSetCacheHitEvent
 import org.perses.reduction.event.NodeReductionEndEvent
 import org.perses.reduction.event.NodeReductionStartEvent
+import org.perses.reduction.event.ProgramStateTransitionEvent
 import org.perses.reduction.event.ReductionEndEvent
 import org.perses.reduction.event.ReductionSkippedEvent
 import org.perses.reduction.event.ReductionStartEvent
@@ -88,6 +89,8 @@ abstract class AbstractReductionListener : AutoCloseable {
   open fun onSlicingTokensEnd(event: TokenSlicingEndEvent) {}
 
   open fun onBestProgramUpdated(event: BestProgramUpdateEvent) {}
+
+  open fun onProgramStateTransition(event: ProgramStateTransitionEvent) {}
 
   open fun onReductionSkipped(event: ReductionSkippedEvent) {}
 

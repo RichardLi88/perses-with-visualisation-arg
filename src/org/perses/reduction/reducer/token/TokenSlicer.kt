@@ -25,6 +25,7 @@ import org.perses.reduction.ReducerAnnotation
 import org.perses.reduction.ReducerContext
 import org.perses.spartree.LexerRuleSparTreeNode
 import org.perses.spartree.NodeDeletionActionSet
+import org.perses.spartree.TransformationKind
 import org.perses.util.Util.lazyAssert
 import org.perses.util.shell.ExitCode
 
@@ -74,6 +75,7 @@ class TokenSlicer(
       return NodeDeletionActionSet.createByDeletingNodes(
         subList,
         "token slicer@$tokenCountToDelete",
+        TransformationKind.TOKEN_SLICE,
       )
     }
   }

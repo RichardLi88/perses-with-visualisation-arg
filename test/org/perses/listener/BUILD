@@ -27,8 +27,8 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
-    name = "JsonlVisualizationListenerTest",
-    srcs = ["JsonlVisualizationListenerTest.kt"],
+    name = "ReductionTraceListenerTest",
+    srcs = ["ReductionTraceListenerTest.kt"],
     data = ["//test_data/delta_1"],
     deps = [
         "//:jackson",

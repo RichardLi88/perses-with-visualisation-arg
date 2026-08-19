@@ -31,12 +31,14 @@ import org.perses.util.Util.lazyAssert
 import org.perses.util.toImmutableList
 import org.perses.util.transformToImmutableList
 import java.lang.ref.WeakReference
+import java.util.concurrent.atomic.AtomicLong
 
 /** A spar-tree, the primary data structure for the Perses program reduction.  */
 class SparTree internal constructor(
   realRoot: AbstractSparTreeNode?,
   val sparTreeNodeFactory: SparTreeNodeFactory,
   specifiedSentinelRoot: SparTreeSentinelRootNode? = null,
+  initialReductionStateId: String = INITIAL_REDUCTION_STATE_ID,
 ) : AbstractUnmodifiableSparTree() {
   init {
     require(realRoot == null || !realRoot.isPermanentlyDeleted) {
@@ -71,6 +73,19 @@ class SparTree internal constructor(
 
   internal var version = 0
     private set
+
+  var reductionStateId: String = initialReductionStateId
+    private set
+
+  fun preserveReductionStateFrom(other: SparTree) {
+    reductionStateId = other.reductionStateId
+  }
+
+  fun transitionToSystemState(): Pair<String, String> {
+    val parentStateId = reductionStateId
+    reductionStateId = "system:${systemStateIdGenerator.incrementAndGet()}"
+    return parentStateId to reductionStateId
+  }
 
   var dirty = false
     private set
@@ -204,6 +219,7 @@ class SparTree internal constructor(
   fun createRootReplacementEdit(
     newRoot: AbstractSparTreeNode,
     actionsDescription: String,
+    transformationKind: TransformationKind = TransformationKind.REPLACE,
   ): AnyNodeReplacementTreeEdit {
     require(newRoot.parent == null) { "New root node must have no parent" }
     return createAnyNodeReplacementEdit(
@@ -211,6 +227,7 @@ class SparTree internal constructor(
         targetNode = realRoot,
         replacingNode = newRoot,
         actionsDescription = actionsDescription,
+        transformationKind = transformationKind,
       ),
     )
   }
@@ -225,13 +242,20 @@ class SparTree internal constructor(
 
   @Synchronized
   fun applyEdit(treeEdit: AbstractSparTreeEdit<*>) {
+    check(treeEdit.baseStateId == reductionStateId) {
+      "Edit ${treeEdit.id} was created from ${treeEdit.baseStateId}, not $reductionStateId"
+    }
     val programSizeBefore = program.tokenCount
     treeEdit.applyToTree()
     updateLeafTokenCount()
+    val parentStateId = reductionStateId
+    reductionStateId = "state:${treeEdit.id}"
     val event =
       AbstractSparTreeEditListener.SparTreeEditEvent(
         programSizeBefore,
         treeEdit,
+        parentStateId,
+        reductionStateId,
       )
     program = event.program
     lazyAssert({ program.tokens == computeTokenizedProgram().tokens }) {
@@ -370,6 +394,7 @@ class SparTree internal constructor(
         realRoot = it,
         sparTreeNodeFactory = sparTreeNodeFactory,
         specifiedSentinelRoot = sentinelRootCopy,
+        initialReductionStateId = reductionStateId,
       )
     }
   }
@@ -429,7 +454,9 @@ class SparTree internal constructor(
   }
 
   companion object {
+    const val INITIAL_REDUCTION_STATE_ID = "initial"
     private var globalTreeIdGenerator = 0
+    private val systemStateIdGenerator = AtomicLong()
 
     internal fun updateTokenIntervalUpToRoot(startNode: AbstractSparTreeNode): Boolean {
       var nodeInfo: AbstractSparTreeNode? = startNode

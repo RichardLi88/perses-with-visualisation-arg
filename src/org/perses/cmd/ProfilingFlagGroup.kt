@@ -45,7 +45,7 @@ class ProfilingFlagGroup : AbstractCommandLineFlagGroup(groupName = "Profiling")
 
   @Parameter(
     names = ["--visualization-dump-file"],
-    description = "The JSONL file to record reduction events for visualization.",
+    description = "The schema-2 JSON file to record the reduction graph for visualization.",
     order = 15,
   )
   var visualizationDumpFile: Path? = null

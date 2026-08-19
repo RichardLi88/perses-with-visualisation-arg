@@ -23,6 +23,7 @@ import org.perses.reduction.ReducerContext
 import org.perses.spartree.AbstractSparTreeEdit
 import org.perses.spartree.AbstractSparTreeNode
 import org.perses.spartree.SparTreeBuilder
+import org.perses.spartree.TransformationKind
 import org.perses.util.AbstractFileContent
 import org.perses.util.AutoDeletableFolder
 import org.perses.util.FileNameContentPair
@@ -163,6 +164,7 @@ abstract class AbstractLLMBasedReducer(
               originalTree.createRootReplacementEdit(
                 newRoot = treeNode,
                 actionsDescription = "LPR transformation: ${this::class}",
+                transformationKind = TransformationKind.LLM,
               )
             }
 

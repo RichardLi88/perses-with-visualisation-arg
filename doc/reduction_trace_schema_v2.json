@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://perses-project.github.io/schemas/reduction-trace-2.0.0.json",
+  "title": "Perses reduction trace",
+  "type": "object",
+  "required": [
+    "schemaVersion", "domain", "meta", "summary", "originalStateId", "finalStateId",
+    "programs", "states", "steps", "candidates", "errors"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "2.0.0" },
+    "domain": { "const": "program-reduction" },
+    "meta": {
+      "type": "object",
+      "required": ["tool", "status", "reducerPlan"],
+      "properties": {
+        "tool": { "const": "perses" },
+        "status": { "enum": ["COMPLETED", "FAILED", "INCOMPLETE"] },
+        "sourceFile": { "type": ["string", "null"] },
+        "testScript": { "type": ["string", "null"] },
+        "language": { "type": ["string", "null"] },
+        "commandLine": { "type": ["string", "null"] },
+        "startedAtMillis": { "type": ["integer", "null"] },
+        "finishedAtMillis": { "type": ["integer", "null"] },
+        "reducerPlan": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "summary": { "type": "object" },
+    "originalStateId": { "type": ["string", "null"] },
+    "finalStateId": { "type": ["string", "null"] },
+    "programs": {
+      "type": "object",
+      "patternProperties": {
+        "^p_[0-9a-f]{64}$": { "$ref": "#/$defs/program" }
+      },
+      "additionalProperties": false
+    },
+    "states": { "type": "array", "items": { "$ref": "#/$defs/state" } },
+    "steps": { "type": "array", "items": { "$ref": "#/$defs/step" } },
+    "candidates": { "type": "array", "items": { "$ref": "#/$defs/candidate" } },
+    "errors": { "type": "array", "items": { "type": "object" } }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "program": {
+      "type": "object",
+      "required": ["files", "tokenCount", "tokens"],
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "content", "lines", "chars"],
+            "properties": {
+              "path": { "type": "string" },
+              "content": { "type": "string" },
+              "lines": { "type": "integer", "minimum": 0 },
+              "chars": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "tokenCount": { "type": "integer", "minimum": 0 },
+        "tokens": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["index", "text"],
+            "properties": {
+              "index": { "type": "integer", "minimum": 0 },
+              "text": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "required": [
+        "stateId", "parentStateId", "createdByCandidateId", "programRef", "tokens",
+        "kind", "acceptedAtSeq", "reason"
+      ],
+      "properties": {
+        "stateId": { "type": "string" },
+        "parentStateId": { "type": ["string", "null"] },
+        "createdByCandidateId": { "type": ["string", "null"] },
+        "programRef": { "type": "string", "pattern": "^p_[0-9a-f]{64}$" },
+        "tokens": { "type": "integer", "minimum": 0 },
+        "kind": { "enum": ["INITIAL", "CANDIDATE", "SYSTEM"] },
+        "acceptedAtSeq": { "type": ["integer", "null"] },
+        "reason": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "step": {
+      "type": "object",
+      "required": [
+        "index", "candidateId", "fromStateId", "toStateId", "acceptedAtSeq",
+        "tokensBefore", "tokensAfter", "programRef", "baseProgramRef", "patches", "transformation"
+      ],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "candidateId": { "type": ["string", "null"] },
+        "fromStateId": { "type": "string" },
+        "toStateId": { "type": "string" },
+        "acceptedAtSeq": { "type": "integer", "minimum": 0 },
+        "tokensBefore": { "type": "integer", "minimum": 0 },
+        "tokensAfter": { "type": "integer", "minimum": 0 },
+        "programRef": { "type": "string", "pattern": "^p_[0-9a-f]{64}$" },
+        "baseProgramRef": { "type": "string", "pattern": "^p_[0-9a-f]{64}$" },
+        "patches": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "transformation": { "type": ["object", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "candidate": {
+      "type": "object",
+      "required": [
+        "candidateId", "editId", "baseStateId", "resultStateId", "status", "becameBest",
+        "observedAtSeq", "acceptedAtSeq", "observedAtMs", "acceptedAtMs", "tokensAfter",
+        "programRef", "patches", "exitCode", "elapsedMillis", "cancelDurationMillis",
+        "transformation"
+      ],
+      "properties": {
+        "candidateId": { "type": "string", "pattern": "^candidate:[0-9]+$" },
+        "editId": { "type": "integer", "minimum": 0 },
+        "baseStateId": { "type": "string" },
+        "resultStateId": { "type": ["string", "null"] },
+        "status": {
+          "enum": ["INTERESTING", "REJECTED", "INVALID", "CACHE_HIT", "CANCELLED", "NOT_TESTED"]
+        },
+        "becameBest": { "type": "boolean" },
+        "observedAtSeq": { "type": ["integer", "null"] },
+        "acceptedAtSeq": { "type": ["integer", "null"] },
+        "observedAtMs": { "type": ["integer", "null"] },
+        "acceptedAtMs": { "type": ["integer", "null"] },
+        "tokensAfter": { "type": "integer", "minimum": 0 },
+        "programRef": { "type": ["string", "null"] },
+        "patches": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "object",
+            "required": ["path", "kind", "diff"],
+            "properties": {
+              "path": { "type": "string" },
+              "kind": { "enum": ["ADD", "DELETE", "MODIFY"] },
+              "diff": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "exitCode": { "type": ["integer", "null"] },
+        "elapsedMillis": { "type": ["integer", "null"] },
+        "cancelDurationMillis": { "type": ["integer", "null"] },
+        "transformation": { "$ref": "#/$defs/transformation" }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "programRef": { "type": "string", "pattern": "^p_[0-9a-f]{64}$" },
+            "patches": { "type": "null" }
+          }
+        },
+        {
+          "properties": {
+            "programRef": { "type": "null" },
+            "patches": { "type": "array" }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "transformation": {
+      "type": "object",
+      "required": ["kind", "editClass", "description", "reducer", "reducerPass", "actions", "targets"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "DELETE", "DELTA_DEBUG", "LIST_MINIMIZE", "TOKEN_SLICE", "LINE_SLICE",
+            "HOIST", "REPLACE", "LATRA", "LLM", "OTHER"
+          ]
+        },
+        "editClass": { "type": "string" },
+        "description": { "type": "string" },
+        "reducer": { "type": ["string", "null"] },
+        "reducerPass": { "type": "integer", "minimum": 0 },
+        "actions": { "type": "array", "items": { "type": "object" } },
+        "targets": { "type": "array", "items": { "type": "object" } }
+      },
+      "additionalProperties": false
+    }
+  }
+}

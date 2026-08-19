@@ -22,9 +22,16 @@ import org.perses.util.transformToImmutableList
 class NodeDeletionActionSet private constructor(
   actions: ImmutableList<NodeDeletionAction>,
   actionsDescription: String,
-) : AbstractActionSet<NodeDeletionAction>(actions, actionsDescription, canBeSorted = true) {
+  transformationKind: TransformationKind,
+) : AbstractActionSet<NodeDeletionAction>(
+    actions,
+    actionsDescription,
+    transformationKind,
+    canBeSorted = true,
+  ) {
   class Builder(
     private val actionsDescription: String,
+    private val transformationKind: TransformationKind = TransformationKind.DELETE,
   ) {
     private val nodesToDelete = LinkedHashSet<AbstractSparTreeNode>()
 
@@ -46,6 +53,7 @@ class NodeDeletionActionSet private constructor(
             .sortedBy { it.nodeId }
             .transformToImmutableList { NodeDeletionAction(it) },
         actionsDescription = actionsDescription,
+        transformationKind = transformationKind,
       )
 
     fun size(): Int = nodesToDelete.size
@@ -56,15 +64,19 @@ class NodeDeletionActionSet private constructor(
     fun createByDeleteSingleNode(
       node: AbstractSparTreeNode,
       actionsDescription: String,
+      transformationKind: TransformationKind = TransformationKind.DELETE,
     ): NodeDeletionActionSet =
       NodeDeletionActionSet(
         ImmutableList.of(NodeDeletionAction(node)),
         actionsDescription,
+        transformationKind,
       )
 
     fun createByDeletingNodes(
       nodes: Iterable<AbstractSparTreeNode>,
       actionsDescription: String,
-    ): NodeDeletionActionSet = Builder(actionsDescription).deleteNodes(nodes).build()
+      transformationKind: TransformationKind = TransformationKind.DELETE,
+    ): NodeDeletionActionSet =
+      Builder(actionsDescription, transformationKind).deleteNodes(nodes).build()
   }
 }

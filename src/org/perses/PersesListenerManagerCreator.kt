@@ -17,9 +17,9 @@
 package org.perses
 
 import com.google.common.collect.ImmutableList
-import org.perses.listener.JsonlVisualizationListener
 import org.perses.listener.LoggingListener
 import org.perses.listener.ProgressMonitorForNodeReducer
+import org.perses.listener.ReductionTraceListener
 import org.perses.listener.StatisticsListener
 import org.perses.listener.TestScriptExecutionListener
 import org.perses.reduction.AbstractReductionListener
@@ -56,11 +56,13 @@ object PersesListenerManagerCreator {
     }
     cmd.profilingFlags.visualizationDumpFile?.let {
       builder.add(
-        JsonlVisualizationListener(
+        ReductionTraceListener(
           fileStreamPool.rentStream(
             path = it,
-            description = JsonlVisualizationListener::class.toString(),
+            description = ReductionTraceListener::class.toString(),
           ),
+          sourceFile = cmd.inputFlags.inputFile?.toString(),
+          testScript = cmd.inputFlags.testScript?.toString(),
         ),
       )
     }

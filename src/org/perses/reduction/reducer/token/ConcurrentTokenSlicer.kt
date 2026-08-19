@@ -26,6 +26,7 @@ import org.perses.reduction.TreeEditWithItsResult
 import org.perses.spartree.LexerRuleSparTreeNode
 import org.perses.spartree.NodeDeletionActionSet
 import org.perses.spartree.SparTree
+import org.perses.spartree.TransformationKind
 import org.perses.util.Util
 import org.perses.util.toImmutableList
 import org.perses.util.transformToImmutableList
@@ -71,6 +72,7 @@ class ConcurrentTokenSlicer(
       NodeDeletionActionSet.createByDeletingNodes(
         tokens.subList(interval.inclusiveStart, interval.exclusiveEnd),
         "token slicer@${interval.size()}",
+        TransformationKind.TOKEN_SLICE,
       )
 
     override fun analyzeResultAndGetBest(

@@ -19,7 +19,7 @@ package org.perses.spartree
 class DescendantHoistingTreeEdit internal constructor(
   tree: SparTree,
   actionSet: NodeReplacementActionSet,
-) : AbstractNodeReplacementTreeEdit(tree, actionSet) {
+) : AbstractNodeReplacementTreeEdit(tree, actionSet, TransformationKind.HOIST) {
   init {
     require(actionSet.actions.size == 1) {
       "Only single action is allowed for not."

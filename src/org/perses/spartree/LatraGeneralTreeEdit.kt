@@ -22,7 +22,7 @@ import org.perses.util.Util.lazyAssert
 class LatraGeneralTreeEdit internal constructor(
   tree: SparTree,
   actionSet: LatraGeneralActionSet,
-) : AbstractSparTreeEdit<AbstractTreeEditAction>(actionSet, tree) {
+) : AbstractSparTreeEdit<AbstractTreeEditAction>(actionSet, tree, TransformationKind.LATRA) {
   override fun computeProgram(tree: SparTree): TokenizedProgram =
     tree.customizeProgram(TokenizedProgramConstructor(actionSet))
 

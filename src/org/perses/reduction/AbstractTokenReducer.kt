@@ -47,6 +47,7 @@ import org.perses.spartree.NodeDeletionActionSet
 import org.perses.spartree.NodeDeletionTreeEdit
 import org.perses.spartree.SparTree
 import org.perses.spartree.SparTreeSimplifier
+import org.perses.spartree.TransformationKind
 import org.perses.util.AbstractFileContent
 import org.perses.util.FileNameContentPair
 import org.perses.util.TimeUtil
@@ -289,7 +290,10 @@ abstract class AbstractTokenReducer protected constructor(
     contentList.forEach {
       builder.add(
         FileNameContentPair(
-          fileName = it.fileName.baseName,
+          fileName =
+            ioManager.reductionInputs
+              .getRelativePathForOrigFile(it.fileName)
+              .joinToString("/"),
           content = it.content,
         ),
       )
@@ -314,7 +318,10 @@ abstract class AbstractTokenReducer protected constructor(
     input: ImmutableList<AbstractSparTreeNode>,
   ): NodeDeletionActionSet {
     val actionSetBuilder =
-      NodeDeletionActionSet.Builder("list minimizer@${input.size}")
+      NodeDeletionActionSet.Builder(
+        "list minimizer@${input.size}",
+        TransformationKind.LIST_MINIMIZE,
+      )
     Util.visitDifference(superList = originalInput, subList = input) {
       lazyAssert { !it.isPermanentlyDeleted }
       actionSetBuilder.deleteNode(it)
@@ -338,6 +345,7 @@ abstract class AbstractTokenReducer protected constructor(
         NodeDeletionActionSet
           .Builder(
             "${actionSetDescriptionPrefix}dd@${allDeletedNodes.size}",
+            TransformationKind.DELTA_DEBUG,
           ).deleteNodes(allDeletedNodes)
           .build()
       if (reducerContext.nodeActionSetCache.isCachedOrCacheIt(actionSet)) {

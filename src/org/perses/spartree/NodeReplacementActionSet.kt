@@ -23,9 +23,11 @@ import org.perses.util.toImmutableList
 class NodeReplacementActionSet private constructor(
   childHoistingActions: ImmutableList<NodeReplacementAction>,
   actionsDescription: String,
+  transformationKind: TransformationKind = TransformationKind.REPLACE,
 ) : AbstractActionSet<NodeReplacementAction>(
     childHoistingActions,
     actionsDescription,
+    transformationKind,
     canBeSorted = true,
   ) {
   init {
@@ -34,6 +36,7 @@ class NodeReplacementActionSet private constructor(
 
   class Builder(
     private val actionsDescription: String,
+    private val transformationKind: TransformationKind = TransformationKind.REPLACE,
   ) {
     private val node2ReplacementMap = LinkedHashMap<AbstractSparTreeNode, AbstractSparTreeNode>()
 
@@ -52,6 +55,7 @@ class NodeReplacementActionSet private constructor(
           .sorted()
           .toImmutableList(),
         actionsDescription,
+        transformationKind,
       )
   }
 
@@ -68,17 +72,20 @@ class NodeReplacementActionSet private constructor(
       targetNode: AbstractSparTreeNode,
       replacingNode: AbstractSparTreeNode,
       actionsDescription: String,
+      transformationKind: TransformationKind = TransformationKind.REPLACE,
     ): NodeReplacementActionSet =
       createByReplacingSingleNode(
         NodeReplacementAction(targetNode, replacingNode),
         actionsDescription,
+        transformationKind,
       )
 
     @JvmStatic
     fun createByReplacingSingleNode(
       action: NodeReplacementAction,
       actionsDescription: String,
+      transformationKind: TransformationKind = TransformationKind.REPLACE,
     ): NodeReplacementActionSet =
-      NodeReplacementActionSet(ImmutableList.of(action), actionsDescription)
+      NodeReplacementActionSet(ImmutableList.of(action), actionsDescription, transformationKind)
   }
 }

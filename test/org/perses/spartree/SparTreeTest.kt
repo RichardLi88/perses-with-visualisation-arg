@@ -299,6 +299,7 @@ class SparTreeTest {
       )
     val copy = tree.deepCopy(ReuseNodeIdStrategy)
     assertThat(tree.printTreeStructure()).isEqualTo(copy.result.printTreeStructure())
+    assertThat(copy.result.reductionStateId).isEqualTo(tree.reductionStateId)
     tree.realRoot.preOrderVisit { origNode ->
       val copyNode = copy.getCopyNode(origNode)!!
       assertThat(copy.getOrigNode(copyNode)).isSameInstanceAs(origNode)
@@ -329,9 +330,36 @@ class SparTreeTest {
         copy.result.detachRootFromTree(),
         actionsDescription = "test",
       )
+    assertThat(edit.baseStateId).isEqualTo(SparTree.INITIAL_REDUCTION_STATE_ID)
     tree.applyEdit(edit)
+    assertThat(tree.reductionStateId).isEqualTo("state:${edit.id}")
     assertThat(tree.printTreeStructure()).isEqualTo(origTreeDump)
     assertThat(tree.realRoot).isNotSameInstanceAs(origRoot)
+  }
+
+  @Test
+  fun testConcurrentEditsCaptureTheSameImmutableBaseState() {
+    val tree =
+      TestUtility.createSparTreeFromString(
+        sourceCode = "int a; int b;",
+        languageKind = LanguageC,
+        simplifyTree = true,
+      )
+    val nodes = tree.remainingLexerRuleNodes
+    val first =
+      tree.createNodeDeletionEdit(
+        NodeDeletionActionSet.createByDeleteSingleNode(nodes[1], "first candidate"),
+      )
+    val second =
+      tree.createNodeDeletionEdit(
+        NodeDeletionActionSet.createByDeleteSingleNode(nodes[4], "second candidate"),
+      )
+
+    assertThat(first.baseStateId).isEqualTo(SparTree.INITIAL_REDUCTION_STATE_ID)
+    assertThat(second.baseStateId).isEqualTo(SparTree.INITIAL_REDUCTION_STATE_ID)
+    tree.applyEdit(first)
+    assertThat(second.baseStateId).isEqualTo(SparTree.INITIAL_REDUCTION_STATE_ID)
+    assertThat(tree.reductionStateId).isEqualTo("state:${first.id}")
   }
 
   @Test

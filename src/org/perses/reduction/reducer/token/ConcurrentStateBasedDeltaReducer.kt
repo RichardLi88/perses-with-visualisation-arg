@@ -23,6 +23,7 @@ import org.perses.reduction.ReducerContext
 import org.perses.spartree.LexerRuleSparTreeNode
 import org.perses.spartree.NodeDeletionActionSet
 import org.perses.spartree.SparTree
+import org.perses.spartree.TransformationKind
 
 class ConcurrentStateBasedDeltaReducer(
   reducerContext: ReducerContext,
@@ -52,6 +53,7 @@ class ConcurrentStateBasedDeltaReducer(
     return NodeDeletionActionSet.createByDeletingNodes(
       nodesToDelete,
       "$NAME@chunk${state.chunkSize}",
+      TransformationKind.DELTA_DEBUG,
     )
   }
 

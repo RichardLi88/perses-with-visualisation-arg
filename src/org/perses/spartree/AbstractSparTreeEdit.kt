@@ -24,8 +24,11 @@ import java.util.concurrent.atomic.AtomicInteger
 sealed class AbstractSparTreeEdit<T : AbstractTreeEditAction>(
   val actionSet: AbstractActionSet<T>,
   val tree: SparTree,
+  val transformationKind: TransformationKind,
 ) : Comparable<AbstractSparTreeEdit<*>> {
-  private val id: Int = idGenerator.getAndIncrement()
+  val id: Int = idGenerator.getAndIncrement()
+  val candidateId: String = "candidate:$id"
+  val baseStateId: String = tree.reductionStateId
   private val treeSnapshotVersion = tree.version
 
   val program by lazy {

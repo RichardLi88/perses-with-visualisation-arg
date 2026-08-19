@@ -34,6 +34,7 @@ import org.perses.reduction.event.NodeEditActionSetCacheClearanceEvent
 import org.perses.reduction.event.NodeEditActionSetCacheHitEvent
 import org.perses.reduction.event.NodeReductionEndEvent
 import org.perses.reduction.event.NodeReductionStartEvent
+import org.perses.reduction.event.ProgramStateTransitionEvent
 import org.perses.reduction.event.ReductionEndEvent
 import org.perses.reduction.event.ReductionSkippedEvent
 import org.perses.reduction.event.ReductionStartEvent
@@ -140,6 +141,10 @@ class AsyncReductionListenerManager(
     submitEvent { listener ->
       listener.onBestProgramUpdated(event)
     }
+  }
+
+  fun onProgramStateTransition(event: ProgramStateTransitionEvent) {
+    submitEvent { listener -> listener.onProgramStateTransition(event) }
   }
 
   fun onLevelReductionStart(event: LevelReductionStartEvent) {

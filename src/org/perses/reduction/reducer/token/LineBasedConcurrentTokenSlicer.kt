@@ -25,6 +25,7 @@ import org.perses.reduction.TestScriptExecResult
 import org.perses.spartree.LexerRuleSparTreeNode
 import org.perses.spartree.NodeDeletionActionSet
 import org.perses.spartree.SparTree
+import org.perses.spartree.TransformationKind
 import org.perses.util.Util
 import org.perses.util.toImmutableList
 import org.perses.util.transformToImmutableList
@@ -101,6 +102,7 @@ class LineBasedConcurrentTokenSlicer(
       return NodeDeletionActionSet.createByDeletingNodes(
         nodesToDelete,
         actionsDescription = "line slicer@$initialLineCount",
+        transformationKind = TransformationKind.LINE_SLICE,
       )
     }
 

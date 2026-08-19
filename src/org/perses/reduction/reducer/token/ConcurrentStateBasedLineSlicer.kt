@@ -24,6 +24,7 @@ import org.perses.reduction.ReducerContext
 import org.perses.spartree.LexerRuleSparTreeNode
 import org.perses.spartree.NodeDeletionActionSet
 import org.perses.spartree.SparTree
+import org.perses.spartree.TransformationKind
 import org.perses.util.Util
 import org.perses.util.toImmutableList
 
@@ -79,6 +80,7 @@ class ConcurrentStateBasedLineSlicer(
     return NodeDeletionActionSet.createByDeletingNodes(
       nodesToDelete,
       "$NAME_PREFIX@${state.granularity}",
+      TransformationKind.LINE_SLICE,
     )
   }
 

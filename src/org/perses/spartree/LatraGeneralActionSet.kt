@@ -25,7 +25,12 @@ import com.google.common.collect.ImmutableList
 class LatraGeneralActionSet private constructor(
   actions: ImmutableList<AbstractTreeEditAction>,
   actionsDescription: String,
-) : AbstractActionSet<AbstractTreeEditAction>(actions, actionsDescription, canBeSorted = false) {
+) : AbstractActionSet<AbstractTreeEditAction>(
+    actions,
+    actionsDescription,
+    TransformationKind.LATRA,
+    canBeSorted = false,
+  ) {
   class Builder(
     private val actionsDescription: String,
   ) {

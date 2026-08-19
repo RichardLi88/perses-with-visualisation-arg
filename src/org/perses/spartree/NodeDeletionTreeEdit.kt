@@ -22,7 +22,7 @@ import org.perses.util.Util.lazyAssert
 class NodeDeletionTreeEdit internal constructor(
   tree: SparTree,
   actionSet: NodeDeletionActionSet,
-) : AbstractSparTreeEdit<NodeDeletionAction>(actionSet, tree) {
+) : AbstractSparTreeEdit<NodeDeletionAction>(actionSet, tree, actionSet.transformationKind) {
   init {
     require(!actionSet.isEmpty) { "The passed-in action set is empty." }
   }

@@ -29,6 +29,10 @@ class BestProgramUpdateEvent(
   val program: TokenizedProgram,
   outputCreator: (TokenizedProgram) -> ImmutableList<FileNameContentPair<String>>,
 ) : AbstractReductionEventWithProgramSize(currentTimeMillis, program.tokenCount) {
+  val candidateId: String = edit.candidateId
+  val parentStateId: String = edit.baseStateId
+  val resultStateId: String = "state:${edit.id}"
+
   val textualProgram = LazyProgramOutputer(program, outputCreator)
 
   init {

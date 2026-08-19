@@ -24,6 +24,7 @@ import org.perses.reduction.ReducerContext
 import org.perses.spartree.LexerRuleSparTreeNode
 import org.perses.spartree.NodeDeletionActionSet
 import org.perses.spartree.SparTree
+import org.perses.spartree.TransformationKind
 import org.perses.util.toImmutableList
 
 class ConcurrentStateBasedTokenSlicer(
@@ -59,6 +60,7 @@ class ConcurrentStateBasedTokenSlicer(
     return NodeDeletionActionSet.createByDeletingNodes(
       nodesToDelete,
       "concurrent_state_token_slicer@${state.granularity}",
+      TransformationKind.TOKEN_SLICE,
     )
   }
 

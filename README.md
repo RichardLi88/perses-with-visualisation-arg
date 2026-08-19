@@ -93,11 +93,13 @@ java -jar perses_deploy.jar \
     --visualization-dump-file trace.jsonl
 ```
 
-Candidate and commit records share a `candidateId`. A candidate contains its `baseRevision`, full
-output files, original-format display source, and ordered token lexemes; a commit advances that
-revision. Visualizers should diff a candidate snapshot against its base revision to highlight
-attempted line and token removals. The schema is identified by `schemaVersion` and currently has
-version `1`. The trace can be large because candidate records contain complete source snapshots.
+Candidate and commit records share an opaque string `candidateId`. Each snapshot contains output
+files as `path`/`content` pairs and ordered token objects with `index`/`text`; a commit advances the
+candidate's `baseRevision` to `newRevision`. Commit records retain edit metadata even when no test
+event preceded them, and critical failures are emitted as `error` records. Visualizers should diff
+a candidate snapshot against its base revision. The schema is identified by `schemaVersion` and
+currently has version `1`. The trace can be large because candidate records contain complete source
+snapshots.
 
 Check all available command line arguments
 

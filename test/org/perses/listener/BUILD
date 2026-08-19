@@ -35,6 +35,7 @@ kt_jvm_test(
         "//:truth",
         "//src/org/perses/listener:listeners",
         "//src/org/perses/reduction/reducer:node_based_reducer",
+        "//src/org/perses/util",
         "//test/org/perses/reduction:reducer_functional_test_base",
     ],
 )

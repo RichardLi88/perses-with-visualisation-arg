@@ -18,7 +18,11 @@ import org.perses.reduction.event.LazyProgramOutputer
 import org.perses.reduction.event.ReductionEndEvent
 import org.perses.reduction.event.ReductionStartEvent
 import org.perses.spartree.AbstractSparTreeEdit
+import org.perses.spartree.AnyNodeReplacementTreeEdit
+import org.perses.spartree.DescendantHoistingTreeEdit
+import org.perses.spartree.LatraGeneralTreeEdit
 import org.perses.spartree.NodeDeletionAction
+import org.perses.spartree.NodeDeletionTreeEdit
 import org.perses.spartree.NodeReplacementAction
 import org.perses.util.FileStreamPool
 import java.util.Collections
@@ -44,7 +48,7 @@ class JsonlVisualizationListener(
       timestampMillis = event.currentTimeMillis,
       fields =
         linkedMapOf(
-          "revision" to revision,
+          "initialRevision" to revision,
           "snapshot" to snapshot(event.program, event.textualProgram),
         ),
     )
@@ -59,7 +63,7 @@ class JsonlVisualizationListener(
       event = event,
       extraFields =
         linkedMapOf(
-          "result" to if (event.result.isInteresting) "PASS" else "FAIL",
+          "result" to if (event.result.isInteresting) "pass" else "fail",
           "exitCode" to event.result.exitCode.intValue,
           "elapsedMillis" to event.result.elapsedMillis,
         ),
@@ -73,7 +77,7 @@ class JsonlVisualizationListener(
       type = "candidate_cache_hit",
       timestampMillis = event.currentTimeMillis,
       event = event,
-      extraFields = linkedMapOf("result" to "REJECTED_CACHED"),
+      extraFields = linkedMapOf("result" to "fail"),
     )
   }
 
@@ -84,7 +88,7 @@ class JsonlVisualizationListener(
       type = "candidate_cancelled",
       timestampMillis = event.currentTimeMillis,
       event = event,
-      extraFields = linkedMapOf("cancellationMillis" to event.millisToCancelTheTask),
+      extraFields = linkedMapOf("cancelDurationMillis" to event.millisToCancelTheTask),
     )
   }
 
@@ -131,9 +135,9 @@ class JsonlVisualizationListener(
         linkedMapOf(
           "finalRevision" to revision,
           "finalTokenCount" to event.programSize,
-          "scriptExecutions" to
+          "testExecutionCount" to
             event.testScriptExecutorServiceStatistics.scriptExecutionNumber,
-          "externalCacheHits" to
+          "externalCacheHitCount" to
             event.testScriptExecutorServiceStatistics.externalCacheHitNumber,
         ),
     )
@@ -160,39 +164,48 @@ class JsonlVisualizationListener(
     writeEvent(type, timestampMillis, fields)
   }
 
-  private fun candidateId(edit: AbstractSparTreeEdit<*>): Long =
-    candidateIds.computeIfAbsent(edit) { nextCandidateId++ }
+  private fun candidateId(edit: AbstractSparTreeEdit<*>): String =
+    candidateIds.computeIfAbsent(edit) { nextCandidateId++ }.toString()
 
   private fun snapshot(
     program: TokenizedProgram?,
     output: LazyProgramOutputer?,
   ): Map<String, Any?> {
     val outputFiles = output?.fileContentList.orEmpty()
-    val formattedSource =
-      outputFiles
-        .firstOrNull { it.fileName == LazyProgramOutputer.FORMATTED_PROGRAM_FILE_NAME }
-        ?.content
-        ?.asTextFileContent
-        ?.text
     return linkedMapOf(
       "tokenCount" to (program?.tokenCount ?: 0),
-      "tokens" to (program?.tokens?.map { it.lexemeText } ?: emptyList<String>()),
+      "tokens" to
+        (
+          program?.tokens?.mapIndexed { index, token ->
+            linkedMapOf(
+              "index" to index,
+              "text" to token.lexemeText,
+            )
+          } ?: emptyList<Map<String, Any>>()
+        ),
       "files" to
         outputFiles
           .asSequence()
           .filter { it.fileName != LazyProgramOutputer.FORMATTED_PROGRAM_FILE_NAME }
           .map {
             linkedMapOf(
-              "name" to it.fileName,
+              "path" to it.fileName,
               "content" to it.content.asTextFileContent.text,
             )
           }.toList(),
-      "formattedSource" to formattedSource,
     )
   }
 
   private fun editMetadata(edit: AbstractSparTreeEdit<*>): Map<String, Any> =
     linkedMapOf(
+      "kind" to
+        when (edit) {
+          is NodeDeletionTreeEdit -> "NODE_DELETION"
+          is DescendantHoistingTreeEdit -> "DESCENDANT_HOISTING"
+          is AnyNodeReplacementTreeEdit -> "ANY_NODE_REPLACEMENT"
+          is LatraGeneralTreeEdit -> "LATRA_GENERAL"
+          else -> error("Unsupported edit type: ${edit::class.qualifiedName}")
+        },
       "description" to edit.actionSet.actionsDescription,
       "actions" to
         edit.actionSet.actions.map { action ->

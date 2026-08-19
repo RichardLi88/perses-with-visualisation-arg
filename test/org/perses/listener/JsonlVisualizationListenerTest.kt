@@ -17,12 +17,38 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.perses.reduction.ReducerFunctionalTestUtility
 import org.perses.reduction.reducer.PersesNodePrioritizedDfsReducer
+import org.perses.util.FileStreamPool
 import java.nio.file.Files
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.readLines
 
 @RunWith(JUnit4::class)
 class JsonlVisualizationListenerTest {
+  @Test
+  fun testCriticalExceptionUsesVersionOneErrorContract() {
+    val traceFile = Files.createTempFile("perses-visualization-error", ".jsonl")
+    try {
+      FileStreamPool().use { streamPool ->
+        JsonlVisualizationListener(
+          streamPool.rentStream(traceFile, JsonlVisualizationListener::class.toString()),
+        ).use { listener ->
+          listener.onCriticalException(IllegalStateException("reducer failed"))
+        }
+      }
+
+      val record = ObjectMapper().readTree(traceFile.toFile())
+      assertThat(record["schemaVersion"].intValue()).isEqualTo(1)
+      assertThat(record["sequence"].longValue()).isEqualTo(0L)
+      assertThat(record["type"].textValue()).isEqualTo("error")
+      assertThat(record["exceptionClass"].textValue())
+        .isEqualTo(IllegalStateException::class.java.name)
+      assertThat(record["message"].textValue()).isEqualTo("reducer failed")
+      assertThat(record["stackTrace"].textValue()).contains("IllegalStateException")
+    } finally {
+      traceFile.deleteIfExists()
+    }
+  }
+
   @Test
   fun testVisualizationTraceLinksTestedCandidatesToCommits() {
     val traceFile = Files.createTempFile("perses-visualization", ".jsonl")
@@ -50,19 +76,30 @@ class JsonlVisualizationListenerTest {
         .containsExactly(JsonlVisualizationListener.SCHEMA_VERSION)
       assertThat(records.first()["type"].textValue()).isEqualTo("run_started")
       assertThat(records.last()["type"].textValue()).isEqualTo("run_finished")
+      assertThat(records.first()["initialRevision"].longValue()).isEqualTo(0L)
+      assertThat(records.first().has("revision")).isFalse()
 
       val testedCandidates =
         records
           .filter { it.hasType("candidate_tested") }
-          .associateBy { it["candidateId"].longValue() }
+          .associateBy { it["candidateId"].textValue() }
       val commits = records.filter { it.hasType("candidate_committed") }
       assertThat(testedCandidates).isNotEmpty()
       assertThat(commits).isNotEmpty()
       assertThat(
         commits.any { commit ->
-          testedCandidates[commit["candidateId"].longValue()]?.get("result")?.textValue() == "PASS"
+          testedCandidates[commit["candidateId"].textValue()]?.get("result")?.textValue() == "pass"
         },
       ).isTrue()
+
+      records.filter { it.hasType("candidate_tested") }.forEach { candidate ->
+        assertThat(candidate["candidateId"].isTextual).isTrue()
+        assertThat(candidate["result"].textValue()).isAnyOf("pass", "fail")
+        assertThat(candidate["edit"]["kind"].textValue()).isNotEmpty()
+        candidate["edit"]["actions"].forEach { action ->
+          assertThat(action["kind"].textValue()).isAnyOf("DELETE", "REPLACE")
+        }
+      }
 
       commits.forEachIndexed { index, commit ->
         assertThat(commit["baseRevision"].longValue()).isEqualTo(index.toLong())
@@ -71,6 +108,10 @@ class JsonlVisualizationListenerTest {
       }
       assertSnapshot(records.first()["snapshot"])
       assertThat(records.last()["finalRevision"].longValue()).isEqualTo(commits.size.toLong())
+      assertThat(records.last().has("testExecutionCount")).isTrue()
+      assertThat(records.last().has("externalCacheHitCount")).isTrue()
+      assertThat(records.last().has("scriptExecutions")).isFalse()
+      assertThat(records.last().has("externalCacheHits")).isFalse()
     } finally {
       traceFile.deleteIfExists()
     }
@@ -78,9 +119,13 @@ class JsonlVisualizationListenerTest {
 
   private fun assertSnapshot(snapshot: JsonNode) {
     assertThat(snapshot["tokens"].size()).isEqualTo(snapshot["tokenCount"].intValue())
+    snapshot["tokens"].forEachIndexed { index, token ->
+      assertThat(token["index"].intValue()).isEqualTo(index)
+      assertThat(token["text"].isTextual).isTrue()
+    }
     assertThat(snapshot["files"].isEmpty).isFalse()
-    assertThat(snapshot["formattedSource"].textValue()).contains("int printf")
-    val mainFile = snapshot["files"].first { it["name"].textValue() == "t.c" }
+    assertThat(snapshot.has("formattedSource")).isFalse()
+    val mainFile = snapshot["files"].first { it["path"].textValue() == "t.c" }
     assertThat(mainFile["content"].textValue()).contains("\n")
   }
 

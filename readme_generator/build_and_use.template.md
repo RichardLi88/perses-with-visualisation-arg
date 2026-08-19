@@ -39,6 +39,26 @@ There are three ways to obtain Perses.
   supports C, Rust, Java and Go. Note that we can easily support any other languages,
   if the specific language can be parsed by an Antlr parser.
 
+### Reduction visualization trace
+
+Use `--visualization-dump-file <trace.jsonl>` to create a versioned JSONL event stream for
+visualizing attempted and accepted reductions. Each line is one JSON object. The stream records the
+initial program, tested candidates, cached rejections, cancelled tests, committed candidates, and
+the final reduction summary.
+
+```bash
+java -jar perses_deploy.jar \
+    --test-script test.sh \
+    --input-file input.c \
+    --visualization-dump-file trace.jsonl
+```
+
+Candidate and commit records share a `candidateId`. A candidate contains its `baseRevision`, full
+output files, original-format display source, and ordered token lexemes; a commit advances that
+revision. Visualizers should diff a candidate snapshot against its base revision to highlight
+attempted line and token removals. The schema is identified by `schemaVersion` and currently has
+version `1`. The trace can be large because candidate records contain complete source snapshots.
+
 Check all available command line arguments
 
 ```bash
@@ -46,4 +66,3 @@ java -jar perses_deploy.jar  --help
 ```
 
 The following is the complete list of command line arguments.
-

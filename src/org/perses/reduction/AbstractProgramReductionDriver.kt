@@ -43,6 +43,7 @@ import org.perses.reduction.cache.QueryCacheMemoryProfiler
 import org.perses.reduction.cache.QueryCacheTimeCsvProfiler
 import org.perses.reduction.cache.QueryCacheTimeProfiler
 import org.perses.reduction.cache.QueryCacheType
+import org.perses.reduction.event.LazyProgramOutputer
 import org.perses.reduction.event.ReductionStartEvent
 import org.perses.reduction.event.SanityCheckEvent
 import org.perses.reduction.event.TestScriptExecutorServiceStatisticsSnapshot
@@ -81,6 +82,8 @@ import org.perses.spartree.SparTree
 import org.perses.spartree.SparTreeBuilder
 import org.perses.spartree.SparTreeNodeFactory
 import org.perses.spartree.SparTreeSimplifier
+import org.perses.util.AbstractFileContent
+import org.perses.util.FileNameContentPair
 import org.perses.util.Serialization
 import org.perses.util.TimeSpan
 import org.perses.util.TimeUtil
@@ -278,7 +281,31 @@ abstract class AbstractProgramReductionDriver(
           objectMapperCustomizer = Serialization::customizeObjectMapperByUsingBasenameForPath,
         ),
       extraData = "Parser Facade: ${configuration.parserFacade::class}",
+      program = parsableTree.programSnapshot,
+      outputCreator = ::computeFileContentListForProgram,
     )
+
+  private fun computeFileContentListForProgram(
+    program: TokenizedProgram,
+  ): ImmutableList<FileNameContentPair<String>> {
+    val contentList = ioManager.outputManagerFactory.createManagerFor(program).fileContentList
+    return ImmutableList
+      .builderWithExpectedSize<FileNameContentPair<String>>(contentList.size + 1)
+      .apply {
+        contentList.forEach {
+          add(FileNameContentPair(fileName = it.fileName.baseName, content = it.content))
+        }
+        add(
+          FileNameContentPair(
+            fileName = LazyProgramOutputer.FORMATTED_PROGRAM_FILE_NAME,
+            content =
+              AbstractFileContent.TextFileContent(
+                configuration.originalFormatPrinter.print(program).sourceCode,
+              ),
+          ),
+        )
+      }.build()
+  }
 
   // TODO(cnsun): need to add the coarse-grit latra reducer here.
   private fun createReducerExecutionPlan(
@@ -711,7 +738,9 @@ abstract class AbstractProgramReductionDriver(
             reductionState.fixpointIterationStartEvent.createBestProgramUpdatedEvent(
               currentTimeMillis = System.currentTimeMillis(),
               programSizeBefore = event.programSizeBefore,
-              programSizeAfter = event.program.tokenCount,
+              edit = event.edit,
+              program = event.program,
+              outputCreator = ::computeFileContentListForProgram,
             ),
           )
         }

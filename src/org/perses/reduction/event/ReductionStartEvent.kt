@@ -16,8 +16,11 @@
  */
 package org.perses.reduction.event
 
+import com.google.common.collect.ImmutableList
+import org.perses.program.TokenizedProgram
 import org.perses.reduction.AbstractReducerNameAndDesc
 import org.perses.spartree.AbstractUnmodifiableSparTree
+import org.perses.util.FileNameContentPair
 import java.lang.ref.WeakReference
 
 class ReductionStartEvent(
@@ -26,10 +29,21 @@ class ReductionStartEvent(
   programSize: Int,
   val commandLineOptions: String,
   val extraData: String? = null,
+  program: TokenizedProgram? = null,
+  outputCreator: ((TokenizedProgram) -> ImmutableList<FileNameContentPair<String>>)? = null,
 ) : AbstractStartEvent(
     currentTimeMillis,
     programSize,
   ) {
+  val textualProgram: LazyProgramOutputer? =
+    if (program != null && outputCreator != null) {
+      LazyProgramOutputer(program, outputCreator)
+    } else {
+      null
+    }
+
+  val program: TokenizedProgram? = program
+
   private var currentIteration = 0
 
   override fun initialProgramSize() = programSize

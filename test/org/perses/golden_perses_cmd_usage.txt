@@ -123,6 +123,8 @@ Usage: org.perses.Main [options]
       Default: true
     --stat-dump-file
       The file to save the statistics collected during reduction.
+    --visualization-dump-file
+      The JSONL file to record reduction events for visualization.
     --profile-query-cache-time
       The file to save the profiling data of the query cache.
     --profile-query-cache-time-csv

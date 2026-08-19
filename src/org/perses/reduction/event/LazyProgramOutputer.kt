@@ -24,13 +24,19 @@ class LazyProgramOutputer(
   program: TokenizedProgram,
   outputCreator: (TokenizedProgram) -> ImmutableList<FileNameContentPair<String>>,
 ) {
-  val textualContent: String by lazy {
-    val outputList = outputCreator(program)
+  val fileContentList: ImmutableList<FileNameContentPair<String>> by lazy {
+    outputCreator(program)
+  }
 
-    outputList
+  val textualContent: String by lazy {
+    fileContentList
       .flatMap {
         sequenceOf("--file: ${it.fileName}--", it.content)
       }.joinToString(separator = "\n")
       .trim()
+  }
+
+  companion object {
+    const val FORMATTED_PROGRAM_FILE_NAME = "<formatted tokenized program in its original format>"
   }
 }

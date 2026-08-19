@@ -44,6 +44,13 @@ class ProfilingFlagGroup : AbstractCommandLineFlagGroup(groupName = "Profiling")
   var statDumpFile: Path? = null
 
   @Parameter(
+    names = ["--visualization-dump-file"],
+    description = "The JSONL file to record reduction events for visualization.",
+    order = 15,
+  )
+  var visualizationDumpFile: Path? = null
+
+  @Parameter(
     names = ["--profile-query-cache-time"],
     description = "The file to save the profiling data of the query cache.",
     order = 20,

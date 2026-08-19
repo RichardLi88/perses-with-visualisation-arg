@@ -16,12 +16,21 @@
  */
 package org.perses.reduction.event
 
+import com.google.common.collect.ImmutableList
+import org.perses.program.TokenizedProgram
+import org.perses.spartree.AbstractSparTreeEdit
+import org.perses.util.FileNameContentPair
+
 class BestProgramUpdateEvent(
   val currentFixpointIteration: FixpointIterationStartEvent,
   currentTimeMillis: Long,
   val programSizeBefore: Int,
-  programSizeAfter: Int,
-) : AbstractReductionEventWithProgramSize(currentTimeMillis, programSizeAfter) {
+  val edit: AbstractSparTreeEdit<*>,
+  val program: TokenizedProgram,
+  outputCreator: (TokenizedProgram) -> ImmutableList<FileNameContentPair<String>>,
+) : AbstractReductionEventWithProgramSize(currentTimeMillis, program.tokenCount) {
+  val textualProgram = LazyProgramOutputer(program, outputCreator)
+
   init {
     // FIXME(cnsun): this also needs to check the num of chars of tokens in the case of ==.
     //   FIXME(cnsun): fix this assertion

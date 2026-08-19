@@ -76,14 +76,18 @@ class FixpointIterationStartEvent internal constructor(
   fun createBestProgramUpdatedEvent(
     currentTimeMillis: Long,
     programSizeBefore: Int,
-    programSizeAfter: Int,
+    edit: org.perses.spartree.AbstractSparTreeEdit<*>,
+    program: TokenizedProgram,
+    outputCreator: (TokenizedProgram) -> ImmutableList<FileNameContentPair<String>>,
   ): BestProgramUpdateEvent {
     check(!ended)
     return BestProgramUpdateEvent(
       currentFixpointIteration = this,
       currentTimeMillis = currentTimeMillis,
       programSizeBefore = programSizeBefore,
-      programSizeAfter = programSizeAfter,
+      edit = edit,
+      program = program,
+      outputCreator = outputCreator,
     )
   }
 

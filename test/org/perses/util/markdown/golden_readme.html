@@ -73,6 +73,21 @@ supports C, Rust, Java and Go. Note that we can easily support any other languag
 if the specific language can be parsed by an Antlr parser.</p>
 </li>
 </ul>
+<h3>Reduction visualization trace</h3>
+<p>Use <code>--visualization-dump-file &lt;trace.jsonl&gt;</code> to create a versioned JSONL event stream for
+visualizing attempted and accepted reductions. Each line is one JSON object. The stream records the
+initial program, tested candidates, cached rejections, cancelled tests, committed candidates, and
+the final reduction summary.</p>
+<pre><code class="language-bash">java -jar perses_deploy.jar \
+    --test-script test.sh \
+    --input-file input.c \
+    --visualization-dump-file trace.jsonl
+</code></pre>
+<p>Candidate and commit records share a <code>candidateId</code>. A candidate contains its <code>baseRevision</code>, full
+output files, original-format display source, and ordered token lexemes; a commit advances that
+revision. Visualizers should diff a candidate snapshot against its base revision to highlight
+attempted line and token removals. The schema is identified by <code>schemaVersion</code> and currently has
+version <code>1</code>. The trace can be large because candidate records contain complete source snapshots.</p>
 <p>Check all available command line arguments</p>
 <pre><code class="language-bash">java -jar perses_deploy.jar  --help
 </code></pre>
@@ -202,6 +217,8 @@ if the specific language can be parsed by an Antlr parser.</p>
       Default: true
     --stat-dump-file
       The file to save the statistics collected during reduction.
+    --visualization-dump-file
+      The JSONL file to record reduction events for visualization.
     --profile-query-cache-time
       The file to save the profiling data of the query cache.
     --profile-query-cache-time-csv

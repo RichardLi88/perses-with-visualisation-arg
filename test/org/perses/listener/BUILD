@@ -25,3 +25,16 @@ kt_jvm_test(
         "//src/org/perses/reduction:abstract_reducer",
     ],
 )
+
+kt_jvm_test(
+    name = "JsonlVisualizationListenerTest",
+    srcs = ["JsonlVisualizationListenerTest.kt"],
+    data = ["//test_data/delta_1"],
+    deps = [
+        "//:jackson",
+        "//:truth",
+        "//src/org/perses/listener:listeners",
+        "//src/org/perses/reduction/reducer:node_based_reducer",
+        "//test/org/perses/reduction:reducer_functional_test_base",
+    ],
+)

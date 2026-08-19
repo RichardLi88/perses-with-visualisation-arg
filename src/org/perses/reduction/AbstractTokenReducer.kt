@@ -39,6 +39,7 @@ import org.perses.reduction.TestScriptExecutorService.AbstractOutputManagerCreat
 import org.perses.reduction.TestScriptExecutorService.Companion.ALWAYS_TRUE_PRECHECK
 import org.perses.reduction.TestScriptExecutorService.Companion.IDENTITY_POST_CHECK
 import org.perses.reduction.cache.AbstractCacheRetrievalResult
+import org.perses.reduction.event.LazyProgramOutputer
 import org.perses.reduction.io.token.TokenReductionIOManager
 import org.perses.spartree.AbstractSparTreeEdit
 import org.perses.spartree.AbstractSparTreeNode
@@ -295,7 +296,7 @@ abstract class AbstractTokenReducer protected constructor(
     }
     builder.add(
       FileNameContentPair(
-        fileName = "<formatted tokenized program in its original format>",
+        fileName = LazyProgramOutputer.FORMATTED_PROGRAM_FILE_NAME,
         content =
           AbstractFileContent.TextFileContent(
             text =

@@ -177,7 +177,9 @@ abstract class AbstractLLMBasedReducer(
             fixpointReductionState.fixpointIterationStartEvent.createBestProgramUpdatedEvent(
               currentTimeMillis = System.currentTimeMillis(),
               programSizeBefore = bestProgram.tokenCount,
-              programSizeAfter = bestCandidateEdit.program.tokenCount,
+              edit = bestCandidateEdit,
+              program = bestCandidateEdit.program,
+              outputCreator = ::computeFileContentListForProgram,
             ),
           )
           bestEdit = bestCandidateEdit

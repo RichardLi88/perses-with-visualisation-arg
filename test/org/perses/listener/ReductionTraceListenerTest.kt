@@ -86,6 +86,16 @@ class ReductionTraceListenerTest {
       assertThat(initialFile["content"].textValue())
         .contains("int main (int argc, char *argv[]) {")
 
+      val programContents =
+        document["programs"].flatMap { program ->
+          program["files"].map { file -> file["content"].textValue() }
+        }
+      assertThat(programContents).isNotEmpty()
+      assertThat(
+        programContents.none(CONSECUTIVE_BLANK_LINES::containsMatchIn),
+      ).isTrue()
+      assertThat(programContents.any { it.contains("\n\n") }).isTrue()
+
       candidates.values.forEach { candidate ->
         assertThat(states).containsKey(candidate["baseStateId"].textValue())
         assertThat(candidate["transformation"]["kind"].textValue()).isNotEmpty()
@@ -135,5 +145,9 @@ class ReductionTraceListenerTest {
   private fun JsonNode.single(): JsonNode {
     assertThat(size()).isEqualTo(1)
     return first()
+  }
+
+  companion object {
+    private val CONSECUTIVE_BLANK_LINES = Regex("(?m)(?:^[\\t \\r]*\\n){2,}")
   }
 }

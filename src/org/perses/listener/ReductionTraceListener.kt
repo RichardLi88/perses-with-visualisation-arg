@@ -444,6 +444,8 @@ class ReductionTraceListener(
             "but found ${outputFiles.size}"
         }
         listOf(outputFiles.single().copy(content = formattedContent))
+      }.map { file ->
+        file.copy(content = collapseBlankLineRuns(file.content))
       }
     return Snapshot(
       tokenCount = program?.tokenCount ?: 0,
@@ -679,6 +681,10 @@ class ReductionTraceListener(
     private const val INITIAL_STATE_ID = "initial"
     private const val INVALID_SYNTAX_EXIT_CODE = 99
     private val REJECTED_STATUSES = setOf("REJECTED", "INVALID")
+    private val CONSECUTIVE_BLANK_LINES = Regex("(?m)(?:^[\\t \\r]*\\n){2,}")
+
+    private fun collapseBlankLineRuns(content: String): String =
+      CONSECUTIVE_BLANK_LINES.replace(content, "\n")
 
     private fun updateDigest(
       digest: MessageDigest,
